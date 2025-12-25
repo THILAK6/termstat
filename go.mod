@@ -1,4 +1,4 @@
-module termstat-api
+module termstat
 
 go 1.24.0
 
