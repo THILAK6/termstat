@@ -1,4 +1,4 @@
-module termstat
+module github.com/THILAK6/termstat
 
 go 1.24.0
 
