@@ -19,7 +19,7 @@ type Event struct {
 	ExitCode	int               `json:"exit_code"`
 	OS 	  	string            `json:"os"`
 	Arch	  	string            `json:"arch"`
-	Duration	int64            `json:"duration"`
+	DurationMs	int64            `json:"duration_ms"`
 	Timestamp	string         `json:"timestamp"`
 }
 
