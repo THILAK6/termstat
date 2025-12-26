@@ -14,7 +14,7 @@ func spawnBackground(event Event) {
 		data, _ := json.Marshal(event)
 		exe, _ := os.Executable()
 
-		cmd := exec.Command(exe, InternalFlag, string(data))
+		cmd := exec.Command(exe, InternalFlag, encoded)
 
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			Setpgid: true,

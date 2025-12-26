@@ -8,13 +8,15 @@ import(
 	"os"
 	"os/exec"
 	"syscall"
+	"encoding/base64"
 )
 
 func spawnBackground(event Event) {
 		data, _ := json.Marshal(event)
-		exe, _ := os.Executable()
+		encoded := base64.StdEncoding.EncodeToString(data)
 
-		cmd := exec.Command(exe, InternalFlag, string(data))
+		exe, _ := os.Executable()
+		cmd := exec.Command(exe, InternalFlag, encoded)
 
 		const (
 			CREATE_NEW_PROCESS_GROUP = 0x00000200

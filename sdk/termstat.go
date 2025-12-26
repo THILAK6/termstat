@@ -58,12 +58,16 @@ func handleInternalPing(){
 	args := os.Args
 	for i, arg := range args {
 		if arg == InternalFlag && i+1 < len(args) {
-			payload := args[i+1]
+			encodedPayload := args[i+1]
+
+			decoded, err := base64.StdEncoding.DecodeString(encodedPayload)
+			if err != nil {
+				os.Exit(1)
+			}
 
 			apiURL := "https://termstat-api-production.up.railway.app/v1/ping"
 			client := &http.Client{Timeout: 5 * time.Second}
-			_, _ = client.Post(apiURL, "application/json", bytes.NewBuffer([]byte(payload)))
-
+			_, _ = client.Post(apiURL, "application/json", bytes.NewBuffer([]byte(decoded)))
 			os.Exit(0)
 		}
 	}
