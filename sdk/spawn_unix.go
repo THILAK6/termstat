@@ -12,8 +12,9 @@ import (
 
 func spawnBackground(event Event) {
 		data, _ := json.Marshal(event)
-		exe, _ := os.Executable()
+		encoded := base64.StdEncoding.EncodeToString(data)
 
+		exe, _ := os.Executable()
 		cmd := exec.Command(exe, InternalFlag, encoded)
 
 		cmd.SysProcAttr = &syscall.SysProcAttr{
