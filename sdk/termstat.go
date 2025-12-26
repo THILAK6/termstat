@@ -50,7 +50,7 @@ func Track(apiKey, version, cmd string) func(int){
 func scrub(command string) string {
 	home, _ := os.UserHomeDir()
 	if home != "" {
-		command =  stringReplaceAll(command, home, "~")
+		command =  strings.ReplaceAll(command, home, "~")
 	}
 	return command
 }
@@ -68,20 +68,4 @@ func handleInternalPing(){
 			os.Exit(0)
 		}
 	}
-}
-
-func sendAsync(event Event) {
-		data, _ := json.Marshal(event)
-		apiURL := "https://termstat-api-production.up.railway.app/v1/ping"
-
-		var cmd *exec.Cmd
-
-		if runtime.GOOS == "windows" {
-			script := fmt.Sprintf(`Invoke-RestMethod -Uri %s -Method Post -ContentType "application/json" -Body '%s'`, apiURL, string(data))
-			cmd = exec.Command("powershell", "-Command", fmt.Sprintf("Start-Job -ScriptBlock {%s}", script))
-		} else {
-			script := fmt.Sprintf(`curl -s -X POST %s -H "Content-Type: application/json" -d '%s' > /dev/null 2>&1 &`, apiURL, string(data))
-			cmd = exec.Command("sh", "-c", script)
-		}
-		_ = cmd.Start()
 }
