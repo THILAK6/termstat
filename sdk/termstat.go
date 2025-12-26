@@ -1,13 +1,16 @@
 package sdk
 
 import (
-	"os"
 	"runtime"
 	"time"
 	"encoding/json"
-	"fmt"
-	"os/exec"
+	"bytes"
+	"net/http"
+	"os"
+	"strings"
 )
+
+const InternalFlag = "--termstat-internal-ping"
 
 type Event struct {
 	APIKey		string            `json:"api_key"`
@@ -16,16 +19,23 @@ type Event struct {
 	ExitCode	int               `json:"exit_code"`
 	OS 	  	string            `json:"os"`
 	Arch	  	string            `json:"arch"`
-	Duration	time.Duration     `json:"duration"`
-	Timestamp	time.Time         `json:"timestamp"`
+	Duration	int64            `json:"duration"`
+	Timestamp	string         `json:"timestamp"`
 }
 
-func Track(apiKey, version, cmd string) func(init){
+func Track(apiKey, version, cmd string) func(int){
+
+	if os.Getenv("TERMSAT_DISABLE") == "1" || os.Getenv("TERMSAT_DISABLE") == "true" {
+		return func(exitCode int){}
+	}
+
+	handleInternalPing()
+
 	start := time.Now()
 	return func(exitCode int){
 		event := Event{
 			APIKey:    apiKey,
-			Cmd:       cmd,
+			Cmd:       scrub(cmd),
 			Version:   version,
 			ExitCode:  exitCode,
 			OS:        runtime.GOOS,
@@ -33,15 +43,45 @@ func Track(apiKey, version, cmd string) func(init){
 			Duration:  time.Since(start).Milliseconds(),
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
-		sendAsync(event)
+		spawnBackground(event)
+	}
+}
+
+func scrub(command string) string {
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		command =  stringReplaceAll(command, home, "~")
+	}
+	return command
+}
+
+func handleInternalPing(){
+	args := os.Args
+	for i, arg := range args {
+		if arg == InternalFlag && i+1 < len(args) {
+			payload := args[i+1]
+
+			apiURL := "https://termstat-api-production.up.railway.app/v1/ping"
+			client := &http.Client{Timeout: 5 * time.Second}
+			_, _ = client.Post(apiURL, "application/json", bytes.NewBuffer([]byte(payload)))
+
+			os.Exit(0)
+		}
 	}
 }
 
 func sendAsync(event Event) {
 		data, _ := json.Marshal(event)
 		apiURL := "https://termstat-api-production.up.railway.app/v1/ping"
-		script := fmt.Sprintf(`curl -s -X POST %s -H "Content-Type: application/json" -d '%s' > /dev/null 2>&1 &`, apiURL, string(data))
 
-		cmd := exec.Command("sh", "-c", script)
+		var cmd *exec.Cmd
+
+		if runtime.GOOS == "windows" {
+			script := fmt.Sprintf(`Invoke-RestMethod -Uri %s -Method Post -ContentType "application/json" -Body '%s'`, apiURL, string(data))
+			cmd = exec.Command("powershell", "-Command", fmt.Sprintf("Start-Job -ScriptBlock {%s}", script))
+		} else {
+			script := fmt.Sprintf(`curl -s -X POST %s -H "Content-Type: application/json" -d '%s' > /dev/null 2>&1 &`, apiURL, string(data))
+			cmd = exec.Command("sh", "-c", script)
+		}
 		_ = cmd.Start()
 }
