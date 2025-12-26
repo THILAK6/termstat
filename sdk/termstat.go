@@ -40,7 +40,7 @@ func Track(apiKey, version, cmd string) func(int){
 			ExitCode:  exitCode,
 			OS:        runtime.GOOS,
 			Arch:      runtime.GOARCH,
-			Duration:  time.Since(start).Milliseconds(),
+			DurationMs:  time.Since(start).Milliseconds(),
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
 		spawnBackground(event)
