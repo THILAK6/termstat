@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+	"encoding/base64"
+
 )
 
 func spawnBackground(event Event) {
