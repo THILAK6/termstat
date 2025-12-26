@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"encoding/base64"
 )
 
 const InternalFlag = "--termstat-internal-ping"
