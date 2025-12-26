@@ -3,7 +3,6 @@ package sdk
 import (
 	"runtime"
 	"time"
-	"encoding/json"
 	"bytes"
 	"net/http"
 	"os"
